@@ -18,32 +18,33 @@ app.get("/", function (req, res) {
   res.sendFile(__dirname + '/views/index.html');
 });
 
-// Example API endpoint to get Unix timestamp in JSON
-app.get("/api/:date", function (req, res) {
+app.get("/api/:date?", function (req, res) {
   const dateParam = req.params.date;
-  
-  // Try to parse the date
   let date;
-  if (isNaN(dateParam)) {
-    // If the parameter is not a number, try to parse it as a date string
-    date = new Date(dateParam);
+
+  if (!dateParam) {
+    // Use the current time for an empty parameter
+    date = new Date();
+  } else if (/^\d+$/.test(dateParam)) {
+    // Check if the parameter is a number (Unix timestamp in seconds or milliseconds)
+    const timestamp = parseInt(dateParam);
+    date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000); // Convert seconds to milliseconds
   } else {
-    // If it's a number, treat it as a Unix timestamp (milliseconds)
-    date = new Date(parseInt(dateParam));
+    // Attempt to parse the parameter as a date string
+    date = new Date(dateParam);
   }
 
-  // Check if the date is valid
-  if (date instanceof Date && !isNaN(date)) {
-    // If valid, return the Unix timestamp and UTC string in JSON
+  // Validate the date object
+  if (date.toString() === "Invalid Date") {
+    res.json({ error: "Invalid Date" });
+  } else {
     res.json({
       unix: date.getTime(),
-      utc: date.toUTCString()
+      utc: date.toUTCString(),
     });
-  } else {
-    // If invalid, return an error response
-    res.json({ error: "Invalid Date" });
   }
 });
+
 
 // your first API endpoint... 
 app.get("/api/hello", function (req, res) {
